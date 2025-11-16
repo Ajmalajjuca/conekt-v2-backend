@@ -5,6 +5,8 @@ const compression = require('compression');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
+const os = require('os');
+
 
 const connectDB = require('./config/database');
 const { scheduleJobs } = require('./services/cronJobs');
@@ -169,9 +171,26 @@ app.use((error, req, res, next) => {
 
 // Start server
 const server = app.listen(PORT, () => {
+  const getLocalIP = () => {
+  const interfaces = os.networkInterfaces();
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name] || []) {
+      if (iface.family === 'IPv4' && !iface.internal) {
+        return iface.address;
+      }
+    }
+  }
+  return 'localhost';
+};
+
+const localIP = getLocalIP();
+
   console.log(`🚀 Conekt Admin Backend running on port ${PORT}`);
+  console.log(`🌍 Local:     http://localhost:${PORT}`);
+  console.log(`📱 Network:   http://${localIP}:${PORT}`);
   console.log(`📊 Environment: ${process.env.NODE_ENV}`);
   console.log(`🗄️  Database: ${process.env.MONGODB_URI}`);
+  
   
   // Schedule cron jobs
   scheduleJobs();
